@@ -1,0 +1,64 @@
+{
+  "name": "rethinkbi",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A modern, open-source BI tool built with Electron, React, and DuckDB.",
+  "main": "dist/main/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"vite --config app/renderer/vite.config.ts\" \"wait-on tcp:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron -r ts-node/register app/main/main.ts\"",
+    "build:renderer": "vite build --config app/renderer/vite.config.ts",
+    "build:main": "tsc -p tsconfig.main.json",
+    "build:preload": "tsc -p tsconfig.preload.json",
+    "build": "npm run build:renderer && npm run build:main && npm run build:preload",
+    "start": "electron dist/main/main.js",
+    "dist": "npm run build && electron-builder"
+  },
+  "build": {
+    "appId": "com.rethinkbi.app",
+    "productName": "RethinkBI",
+    "npmRebuild": false,
+    "files": [
+      "dist/**",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "build"
+    },
+    "mac": {
+      "category": "public.app-category.productivity"
+    },
+    "win": {
+      "target": ["nsis"]
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "category": "Utility"
+    }
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zod": "^3.23.8",
+    "duckdb": "^1.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "@types/node": "^22.7.4",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "concurrently": "^9.0.1",
+    "cross-env": "^7.0.3",
+    "electron": "^31.3.1",
+    "electron-builder": "^24.13.3",
+    "tailwindcss": "^3.4.14",
+    "postcss": "^8.4.47",
+    "autoprefixer": "^10.4.20",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.8",
+    "wait-on": "^8.0.0"
+  }
+}
+
+

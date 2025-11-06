@@ -69,6 +69,10 @@ npm run build    # build renderer + main
 npm run dist     # package app via electron-builder
 ```
 
+If dev doesn't open a window:
+- Ensure port 5173 is free (Vite dev server)
+- On Windows PowerShell, run: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` if scripts are blocked
+
 **First run tips**
 - Use **Data → Import** to load a CSV/Excel/Parquet file. A table appears in the schema pane.
 - Add a **Visual** from the canvas. Set encodings (x/y/color) in the right pane.

@@ -136,6 +136,14 @@ app:exportAs
 app:getStatus
 ```
 
+Minimal boot IPC (implemented in this scaffold):
+
+```
+app:getVersion
+workspace:init
+data:import
+```
+
 Errors are thrown as `ApiError` and normalized by preload.
 
 **Error codes**

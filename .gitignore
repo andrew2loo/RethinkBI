@@ -1,3 +1,15 @@
+node_modules/
+dist/
+workspace/data/
+workspace/**/*.duckdb
+*.log
+.DS_Store
+*.local
+*.env
+*.env.*
+out/
+coverage/
+
 # Logs
 logs
 *.log
