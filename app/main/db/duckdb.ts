@@ -1,11 +1,18 @@
-import { Database } from "duckdb";
 import { tableFromArrays, tableToIPC } from "apache-arrow";
 import type { ColumnDef, TableDef } from "../../../shared/types.js";
 import path from "node:path";
 import fs from "node:fs/promises";
+let duckdbPkg: any;
 
-let db: Database | null = null;
-let connection: ReturnType<Database["connect"]> | null = null;
+async function loadDuckDB(): Promise<any> {
+  if (!duckdbPkg) {
+    duckdbPkg = await import("duckdb");
+  }
+  return duckdbPkg;
+}
+
+let db: any = null;
+let connection: any = null;
 
 export async function initDuckDB(dbPath: string): Promise<void> {
   if (db) return;
@@ -14,11 +21,29 @@ export async function initDuckDB(dbPath: string): Promise<void> {
   const dir = path.dirname(dbPath);
   await fs.mkdir(dir, { recursive: true });
 
-  db = new Database(dbPath);
-  connection = db.connect();
+  try {
+    const pkg = await loadDuckDB();
+    const DatabaseCtor =
+      (pkg as any).Database ??
+      (pkg as any).default?.Database ??
+      (pkg as any).default;
+
+    if (typeof DatabaseCtor !== "function") {
+      throw new Error("DuckDB module missing Database export");
+    }
+
+    db = new DatabaseCtor(dbPath);
+    connection = db.connect();
+  } catch (err) {
+    // If native module isn't available (packaged without rebuild), leave db null
+    // and let callers receive a clear error when they attempt to use it.
+    db = null;
+    connection = null;
+    throw err;
+  }
 }
 
-export async function getDuckDBConnection(): Promise<ReturnType<Database["connect"]>> {
+export async function getDuckDBConnection(): Promise<any> {
   if (!db || !connection) {
     throw new Error("DuckDB not initialized. Call initDuckDB first.");
   }
@@ -29,7 +54,7 @@ export async function queryArrow(sql: string, params?: Record<string, unknown>):
   const conn = await getDuckDBConnection();
   
   return new Promise((resolve, reject) => {
-    conn.all(sql, params || {}, (err, rows) => {
+    conn.all(sql, params || {}, (err: unknown, rows: any) => {
       if (err) {
         reject(err);
         return;
@@ -41,7 +66,7 @@ export async function queryArrow(sql: string, params?: Record<string, unknown>):
           // Create a minimal table structure
           const emptyTable = tableFromArrays({ _empty: [] });
           const buffer = tableToIPC(emptyTable);
-          resolve(buffer.buffer);
+          resolve(new Uint8Array(buffer).buffer);
           return;
         }
 
@@ -57,7 +82,7 @@ export async function queryArrow(sql: string, params?: Record<string, unknown>):
 
         const arrowTable = tableFromArrays(columnArrays);
         const buffer = tableToIPC(arrowTable);
-        resolve(buffer.buffer);
+        resolve(new Uint8Array(buffer).buffer);
       } catch (e) {
         reject(e);
       }
@@ -69,7 +94,7 @@ export async function queryRows(sql: string, params?: Record<string, unknown>): 
   const conn = await getDuckDBConnection();
   
   return new Promise((resolve, reject) => {
-    conn.all(sql, params || {}, (err, rows) => {
+    conn.all(sql, params || {}, (err: unknown, rows: any) => {
       if (err) {
         reject(err);
         return;
@@ -97,7 +122,7 @@ export async function getSchema(): Promise<TableDef[]> {
        WHERE table_schema = 'main'
        ORDER BY table_name, ordinal_position`,
       {},
-      (err, rows) => {
+      (err: unknown, rows: Array<{ table_name: string; column_name: string; data_type: string; is_nullable: string }>) => {
         if (err) {
           reject(err);
           return;

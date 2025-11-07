@@ -13,7 +13,9 @@ import type {
   DatasetImport,
   CreateConnectionConfig,
   ExportPayload,
-  TableDef
+  TableDef,
+  VisualSelect,
+  OrderDir
 } from "../../../shared/types.js";
 import { initDuckDB, queryArrow, queryRows, getSchema, getDuckDBConnection } from "../db/duckdb.js";
 import { ensureWorkspace } from "../workspace.js";
@@ -96,7 +98,7 @@ function normalizeError(err: unknown): ApiError {
 }
 
 // Query execution helpers
-function buildSQLFromVisual(spec: Extract<QuerySpec, { kind: "visual" }>): string {
+function buildSQLFromVisual(spec: { kind: "visual"; table: string; select: VisualSelect[]; filters?: Array<{ col: string; op: string; value?: any }>; groupBy?: string[]; orderBy?: Array<{ col: string; dir: OrderDir }>; limit?: number }): string {
   const selects = spec.select.map(s => {
     const col = s.col;
     const agg = s.agg && s.agg !== "none" ? `${s.agg.toUpperCase()}(${col})` : col;
@@ -241,18 +243,18 @@ export async function handleImportData(
     }
 
     return new Promise((resolve, reject) => {
-      conn.run(sql, (err) => {
+      conn.run(sql, (err: unknown) => {
         if (err) {
           reject(normalizeError(err));
           return;
         }
         // Get row count
-        conn.all(`SELECT COUNT(*) as cnt FROM ${tableName}`, {}, (err2, rows) => {
+        conn.all(`SELECT COUNT(*) as cnt FROM ${tableName}`, {}, (err2: unknown, rows: Array<{ cnt: number }>) => {
           if (err2) {
             reject(normalizeError(err2));
             return;
           }
-          const count = (rows as Array<{ cnt: number }>)[0]?.cnt || 0;
+          const count = rows[0]?.cnt || 0;
           resolve({
             table: tableName,
             rows: count
@@ -378,6 +380,13 @@ export async function handleGetStatus(): Promise<{ engine: "duckdb"; version: st
 export async function initializeDatabase(): Promise<void> {
   const workspaceDir = await ensureWorkspace();
   const dbPath = path.join(workspaceDir, "data", "workspace.duckdb");
-  await initDuckDB(dbPath);
+  try {
+    await initDuckDB(dbPath);
+  } catch (err) {
+    // In packaged builds without native duckdb, initialization may fail.
+    // Defer functionality until native deps are available; other IPC calls will
+    // throw a clear error if used without initialization.
+    console.warn("DuckDB initialization skipped:", err instanceof Error ? err.message : err);
+  }
 }
 
