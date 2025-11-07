@@ -1,30 +1,45 @@
 import type { IpcMain } from "electron";
-import { z } from "zod";
-import { ensureWorkspace } from "./workspace.js";
+import {
+  handleGetSchema,
+  handleRunQuery,
+  handleStartQuery,
+  handleGetQueryResult,
+  handleCancelQuery,
+  handleImportData,
+  handleListConnections,
+  handleCreateConnection,
+  handleDeleteConnection,
+  handleSaveProject,
+  handleLoadProject,
+  handleGetProjectMeta,
+  handleExportAs,
+  handleGetStatus,
+  initializeDatabase
+} from "./ipc/handlers.js";
 
-const ImportRequest = z.object({
-  type: z.enum(["csv", "parquet", "excel", "json"]).optional(),
-  filePath: z.string()
-});
+export async function registerIpc(ipcMain: IpcMain): Promise<void> {
+  // Initialize DuckDB
+  await initializeDatabase();
 
-export function registerIpc(ipcMain: IpcMain): void {
+  // Register all IPC handlers
   ipcMain.handle("app:getVersion", () => {
     return { version: process.versions.electron };
   });
 
-  ipcMain.handle("workspace:init", async () => {
-    const dir = await ensureWorkspace();
-    return { workspaceDir: dir };
-  });
-
-  ipcMain.handle("data:import", async (_e, raw) => {
-    const parsed = ImportRequest.safeParse(raw);
-    if (!parsed.success) {
-      throw new Error(parsed.error.message);
-    }
-    // Placeholder: wire DuckDB ingestion here in future
-    return { ok: true } as const;
-  });
+  ipcMain.handle("app:getSchema", handleGetSchema);
+  ipcMain.handle("app:runQuery", handleRunQuery);
+  ipcMain.handle("app:startQuery", handleStartQuery);
+  ipcMain.handle("app:getQueryResult", handleGetQueryResult);
+  ipcMain.handle("app:cancelQuery", handleCancelQuery);
+  ipcMain.handle("app:importData", handleImportData);
+  ipcMain.handle("app:listConnections", handleListConnections);
+  ipcMain.handle("app:createConnection", handleCreateConnection);
+  ipcMain.handle("app:deleteConnection", handleDeleteConnection);
+  ipcMain.handle("app:saveProject", handleSaveProject);
+  ipcMain.handle("app:loadProject", handleLoadProject);
+  ipcMain.handle("app:getProjectMeta", handleGetProjectMeta);
+  ipcMain.handle("app:exportAs", handleExportAs);
+  ipcMain.handle("app:getStatus", handleGetStatus);
 }
 
 

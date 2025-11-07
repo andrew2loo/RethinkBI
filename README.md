@@ -62,6 +62,31 @@ workspace/
 
 ## 🔧 Development
 
+### Option 1: GitHub Codespaces (Recommended - No Node.js Installation Needed)
+
+1. **Open in Codespaces:**
+   - Go to your GitHub repository
+   - Click the green "Code" button → "Codespaces" tab
+   - Click "Create codespace on main"
+   - Wait for the environment to set up (auto-runs `npm install`)
+
+2. **Run the app:**
+   ```bash
+   npm run dev
+   ```
+   - The Electron app will be accessible via the forwarded port
+   - Port 5173 is automatically forwarded
+
+3. **Build:**
+   ```bash
+   npm run build    # build renderer + main
+   npm run dist     # package app via electron-builder
+   ```
+
+### Option 2: Local Development
+
+**Requirements:** Node.js 20.x or 22.x (Electron 37 uses Node 22)
+
 ```bash
 npm install
 npm run dev      # start Electron + React (hot reload)
@@ -69,9 +94,10 @@ npm run build    # build renderer + main
 npm run dist     # package app via electron-builder
 ```
 
-If dev doesn't open a window:
+**Troubleshooting:**
 - Ensure port 5173 is free (Vite dev server)
 - On Windows PowerShell, run: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` if scripts are blocked
+- If Node.js version is too old, use GitHub Codespaces instead
 
 **First run tips**
 - Use **Data → Import** to load a CSV/Excel/Parquet file. A table appears in the schema pane.

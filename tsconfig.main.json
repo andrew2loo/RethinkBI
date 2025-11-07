@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "dist/main"
   },
-  "include": ["app/main/**/*.ts"]
+  "include": ["app/main/**/*.ts", "shared/**/*.ts"]
 }
 
 

@@ -26,7 +26,7 @@ async function createWindow(): Promise<void> {
     await mainWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
   }
 
-  registerIpc(ipcMain);
+  await registerIpc(ipcMain);
 }
 
 app.whenReady().then(createWindow);
