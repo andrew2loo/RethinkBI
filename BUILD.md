@@ -56,16 +56,36 @@ GitHub Actions can build your app automatically on every push.
 - Select **"Build and Test"** workflow
 - Click **"Run workflow"**
 
-## 🐳 Option 3: Docker (Advanced)
+## 🐳 Option 3: Docker Windows Container
 
-If you have Docker installed, you can use a containerized environment:
+Build in an isolated Windows container without installing Node.js locally.
 
-```bash
-# Create Dockerfile (if needed)
-docker run -it --rm -v ${PWD}:/workspace -w /workspace node:20 bash
-npm install
-npm run build
+### Prerequisites:
+- Docker Desktop for Windows with **Windows containers enabled**
+- Right-click Docker icon → "Switch to Windows containers"
+
+### Quick Build:
+
+```powershell
+# Build the image (Windows container, ltsc2019 base)
+docker build -f Dockerfile.windows -t rethinkbi:windows .
+
+# Run the build inside the container
+docker run --rm `
+  -v ${PWD}:C:\app `
+  -v ${PWD}\dist:C:\app\dist `
+  -v ${PWD}\out:C:\app\out `
+  rethinkbi:windows `
+  powershell -Command "npm run build; npm run dist"
 ```
+
+### Using Docker Compose:
+
+```powershell
+docker-compose -f docker-compose.windows.yml up --build
+```
+
+**See [docs/docker-build.md](docs/docker-build.md) for detailed instructions.**
 
 ## 📦 Build Outputs
 

@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  build:
+    build:
+      context: .
+      dockerfile: Dockerfile.windows
+    image: rethinkbi:windows
+    volumes:
+      # Mount output directory to host
+      - ./dist:C:\app\dist
+      - ./out:C:\app\out
+    working_dir: C:\\app
+    command: cmd /S /C "npm install && npm run build && npm run dist && echo Build artifacts available in dist/ and out/ directories"
+

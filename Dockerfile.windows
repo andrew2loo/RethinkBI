@@ -1,0 +1,40 @@
+# Dockerfile for Windows Container
+# Build RethinkBI Electron app in Windows container
+# Usage: docker build -f Dockerfile.windows -t rethinkbi:windows .
+
+# Try ltsc2019 first (compatible with Windows 10), fallback to ltsc2022
+FROM mcr.microsoft.com/windows/servercore:ltsc2019
+
+# Install Node.js 20 LTS directly (no Chocolatey needed)
+RUN C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Command \
+    $ProgressPreference = 'SilentlyContinue'; \
+    Invoke-WebRequest -Uri 'https://nodejs.org/dist/v20.11.0/node-v20.11.0-x64.msi' -OutFile 'nodejs.msi'; \
+    Start-Process msiexec.exe -ArgumentList '/i nodejs.msi /quiet /norestart' -Wait; \
+    Remove-Item nodejs.msi
+
+# Set PATH to include Node.js
+ENV PATH="C:\Program Files\nodejs;${PATH}"
+
+# Install Git directly (Git is optional for most builds, skip if it fails)
+RUN C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Command \
+    $ProgressPreference = 'SilentlyContinue'; \
+    Invoke-WebRequest -Uri 'https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/Git-2.43.0-64-bit.exe' -OutFile 'git.exe'; \
+    Start-Process git.exe -ArgumentList '/VERYSILENT /NORESTART' -Wait; \
+    Remove-Item git.exe
+
+# Set working directory (Windows path)
+WORKDIR C:\\app
+
+# Copy package files
+COPY package.json ./
+COPY package-lock.json* ./
+
+# Install dependencies (use install if lock file is missing/out of sync)
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Default shell
+CMD ["powershell", "-NoLogo"]
+
